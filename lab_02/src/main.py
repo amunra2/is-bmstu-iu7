@@ -213,6 +213,7 @@ def main():
 
     #rotor = Rotor(alphabet, alphabetMixed2, positionSymbol1)
     #print(rotor.getSymbolPosition(alphabet, ))
+    
 
     # reflector = Reflector(alphabet, alphabetReflect)
 
