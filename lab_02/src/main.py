@@ -11,6 +11,12 @@ class Rotor():
         self.alphabetMixed = alphabetMixed
         self.positionSymbol = positionSymbol
 
+    def rotate(self):
+        posititonOld = self.getSymbolPosition(self.alphabet, self.positionSymbol)
+        self.positionSymbol = self.alphabet[(posititonOld + 1) % len(self.alphabet)]
+
+        return self.positionSymbol
+
     def getSymbolForward(self, symbol: str):
         foundPosition = (self.getSymbolPosition(self.alphabet, self.positionSymbol) + 
             self.getSymbolPosition(self.alphabet, symbol)) % (len(self.alphabet))
@@ -52,7 +58,9 @@ class Reflector():
 
     def reflect(self, symbol: str):
         mixedSymbol = self.alphabetMixed[self.getSymbolPosition(self.alphabet, symbol)]
-        return self.alphabet[self.getSymbolPosition(self.alphabetMixed, mixedSymbol)]
+        print(self.getSymbolPosition(self.alphabet, symbol), self.getSymbolPosition(self.alphabetMixed, mixedSymbol))
+        print(mixedSymbol, self.alphabet[self.getSymbolPosition(self.alphabetMixed, mixedSymbol)])
+        return self.alphabet[self.getSymbolPosition(self.alphabet, mixedSymbol)]
 
     def getSymbolPosition(self, alphabet: list, symbol: str):
         curPos = -1
@@ -133,8 +141,16 @@ class Enigma():
         print(self.rotorCount)
         print("========================================")
 
+    def rotateRotors(self):
+        for rotor in self.rotors:
+            postitonSymbol = rotor.rotate()
+
+            if (postitonSymbol != self.alphabet[0]):
+                break
 
     def process(self, symbol: str):
+        print("Symbol = ", symbol)
+
         for ind in range(0, len(self.rotors), 1):
             symbol = self.rotors[ind].getSymbolForward(symbol)
             print("Rotor[", ind,"] Forward: ", symbol)
@@ -145,6 +161,10 @@ class Enigma():
         for ind in range(len(self.rotors) - 1, -1, -1):
             symbol = self.rotors[ind].getSymbolBack(symbol)
             print("Rotor[", ind,"] Back: ", symbol)
+        
+        # print("\nBefore: ", self.rotors[0].positionSymbol)
+        # self.rotateRotors()
+        # print("After: ", self.rotors[0].positionSymbol)
 
         return symbol
 
@@ -184,15 +204,15 @@ def main():
     #                 [alphabetMixed1, alphabetMixed2, alphabetMixed3],
     #                 [positionSymbol1, positionSymbol2, positionSymbol3])
 
-    enigma = Enigma(alphabet, 3)
-    enterSymbol = "Y"
+    enigma = Enigma(alphabet, 3, alphabetReflect=alphabetReflect)
+    enterSymbol = "T"
     print("\nEnter Symbol: ", enterSymbol, "\n\n")
     res = enigma.process(enterSymbol)
     print("Res Encrypt: ", res, "\n\n")
     print("Res Decrypt: ", enigma.process(res))
 
-    # rotor = Rotor(alphabet, alphabetMixed2, positionSymbol1)
-    # print(rotor.getSymbolPosition(alphabet, ))
+    #rotor = Rotor(alphabet, alphabetMixed2, positionSymbol1)
+    #print(rotor.getSymbolPosition(alphabet, ))
 
     # reflector = Reflector(alphabet, alphabetReflect)
 
