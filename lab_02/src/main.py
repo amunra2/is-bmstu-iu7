@@ -1,37 +1,35 @@
-from dbm import dumb
-from random import shuffle
+from random import randint, shuffle
 import pickle
 
 
 class Rotor():
     alphabet: list
     alphabetMixed: list
-    positionSymbol: str
+    position: int
 
-    def __init__(self, alphabet: list, alphabetMixed: list, positionSymbol: str):
+    def __init__(self, alphabet: list, alphabetMixed: list, position: int):
         self.alphabet = alphabet
         self.alphabetMixed = alphabetMixed
-        self.positionSymbol = positionSymbol
+        self.position = position
 
-    def setPositionSymbol(self, symbol):
-        self.positionSymbol = symbol
+    def setPosition(self, position):
+        self.position = position
 
     def rotate(self):
-        posititonOld = self.getSymbolPosition(self.alphabet, self.positionSymbol)
-        self.positionSymbol = self.alphabet[(posititonOld + 1) % len(self.alphabet)]
+        self.position += 1
 
-        return self.positionSymbol
+        return self.position
 
     def getSymbolForward(self, symbol: str):
-        foundPosition = (self.getSymbolPosition(self.alphabet, self.positionSymbol) + 
-            self.getSymbolPosition(self.alphabet, symbol)) % (len(self.alphabet))
+        foundPosition = (self.getSymbolPosition(self.alphabet, symbol) +
+            self.position) % (len(self.alphabet))
         foundSymbol = self.alphabetMixed[foundPosition]
 
         return foundSymbol
 
     def getSymbolBack(self, symbol: str):
         foundPosition = (self.getSymbolPosition(self.alphabetMixed, symbol) -
-            self.getSymbolPosition(self.alphabet, self.positionSymbol)) % (len(self.alphabet))
+            self.position) % (len(self.alphabet))
         foundSymbol = self.alphabet[foundPosition]
 
         return foundSymbol
@@ -61,13 +59,13 @@ class Enigma():
     alphabet: list
     alphabetReflect: dict
     alphabetMixedN: list
-    positionSymbolN: list
+    positionN: list
     rotorCount: int
     rotors: list
     reflector: Reflector
 
     def __init__(self, alphabet: list, rotorCount: int, alphabetReflect: list = None,
-        alphabetMixedN: list = None, positionSymbolN: list = None):
+        alphabetMixedN: list = None, positionN: list = None):
         self.alphabet = alphabet.copy()
         self.rotorCount = rotorCount if (rotorCount >= 0) else 0
 
@@ -86,26 +84,26 @@ class Enigma():
             else:
                 self.alphabetMixedN = alphabetMixedN.copy()
 
-        if (positionSymbolN is None):
-            self.positionSymbolN = [self.alphabet[0] for _ in range(self.rotorCount)]
+        if (positionN is None):
+            self.positionN = [randint(0, len(self.alphabet)) for _ in range(self.rotorCount)]
         else:
-            if (len(positionSymbolN) != self.rotorCount):
+            if (len(positionN) != self.rotorCount):
                 print("Ошибка: Кол-во Позиционных Cимволов не соответствует кол-ву роторов. \
                     Позиционные Cимволы сгенерированы автоматически")
-                self.positionSymbolN = [self.alphabet[0] for _ in range(self.rotorCount)]
+                self.positionN = [randint(0, len(self.alphabet)) for _ in range(self.rotorCount)]
                 
-            self.positionSymbolN = positionSymbolN.copy()
+            self.positionN = positionN.copy()
 
         self.rotors = [Rotor(self.alphabet, 
                              self.alphabetMixedN[i], 
-                             self.positionSymbolN[i]) 
+                             self.positionN[i]) 
                        for i in range(self.rotorCount)]
 
         self.reflector = Reflector(self.alphabetReflect)
     
     def reset(self):
         for i, rotor in enumerate(self.rotors):
-            rotor.setPositionSymbol(self.positionSymbolN[i])
+            rotor.setPosition(self.positionN[i])
 
     def generateMixedAlphabets(self):
         shuffledAlphabets = list()
@@ -130,24 +128,20 @@ class Enigma():
 
     def rotateRotors(self):
         for rotor in self.rotors:
-            postitonSymbol = rotor.rotate()
+            position = rotor.rotate()
 
-            if (postitonSymbol != self.alphabet[0]):
+            if (position != 0):
                 break
 
     def process(self, symbol: str):
-        # print("Symbol = ", symbol)
 
         for ind in range(0, len(self.rotors), 1):
             symbol = self.rotors[ind].getSymbolForward(symbol)
-            # print("Rotor[", ind,"] Forward: ", symbol)
 
         symbol = self.reflector.reflect(symbol)
-        # print("Rotor Reflect: ", symbol)
 
         for ind in range(len(self.rotors) - 1, -1, -1):
             symbol = self.rotors[ind].getSymbolBack(symbol)
-            # print("Rotor[", ind,"] Back: ", symbol)
         
         self.rotateRotors()
 
@@ -230,7 +224,7 @@ def main():
     #                 [alphabetMixed1, alphabetMixed2, alphabetMixed3],
     #                 [positionSymbol1, positionSymbol2, positionSymbol3])
 
-    enigma = Enigma(alphabet, 10)
+    enigma = Enigma(alphabet, 3, positionN=[1, 2, 3])
     # enterSymbol = "T"
     # print("\nEnter Symbol: ", enterSymbol, "\n\n")
     # res = enigma.process(enterSymbol)
