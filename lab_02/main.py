@@ -1,4 +1,5 @@
 from random import randint, shuffle
+import pickle
 
 
 class Rotor():
@@ -6,10 +7,19 @@ class Rotor():
     alphabetMixed: list
     position: int
 
+
+
     def __init__(self, alphabet: list, alphabetMixed: list, position: int):
         self.alphabet = alphabet
         self.alphabetMixed = alphabetMixed
         self.position = position
+
+        # print("ALPHABET")
+        # print(alphabet)
+        # print("ALPHABET_MIXED")
+        # print(alphabetMixed)
+        # print("POSITION")
+        # print(position)
 
     def setPosition(self, position):
         self.position = position
@@ -136,21 +146,41 @@ class Enigma():
                 break
 
     def process(self, symbol):
+
+        # print("Symbol In = ", symbol)
+
         for ind in range(0, len(self.rotors), 1):
             symbol = self.rotors[ind].getSymbolForward(symbol)
+            # print("RotorForward[", ind, "] = ", symbol)
 
         symbol = self.reflector.reflect(symbol)
+        # print("Reflect[", ind, "] = ", symbol)
+
 
         for ind in range(len(self.rotors) - 1, -1, -1):
             symbol = self.rotors[ind].getSymbolBack(symbol)
+            # print("RotorBack[", ind, "] = ", symbol)
 
+        
         self.rotateRotors()
 
         return symbol
 
     def encodeBinary(self, pathSrc: str, dstName: str):
+        # symbol = self.rotors[0].getSymbolForward(b'\xd8')
+        # print("IN: ", symbol)
+        # symbol = self.rotors[0].getSymbolBack(symbol)
+        # print("BACK: ", symbol)
+
+        # self.process(symbol)
+
         srcFile = open(pathSrc, "rb")
         dstFile = open(dstName, "wb")
+
+        print("====================================")
+
+        # while (byte := srcFile.read(1)):
+        # for i in range(105):
         while True:
             byte = srcFile.read(1)
 
@@ -158,86 +188,164 @@ class Enigma():
                 break
 
             encodedByte = self.process(byte)
+            # print("[", i, "]", type(encodedByte), encodedByte, bytes([i for i in encodedByte]), "\n")
             dstFile.write(bytes(encodedByte))
 
         srcFile.close()
         dstFile.close()
 
-    def encodeStr(self, string: str):
-        encryptString = str()
+        print("Кодирование прошло успешно")
+            
 
-        for symbol in string:
-            res = self.process(symbol)
-            encryptString += res
 
-        return encryptString
-        
+
+FILE = "data.bin"
+
 
 def generateBinaryAlphabet():
+    # alphabet = list()
+
+    # for i in range(256):
+    #     symbol = chr(i).encode()
+    #     res = [bytes([x]) for x in symbol]
+
+    #     for byte in res:
+    #         alphabet.append(byte)
+
+    # alphabet = set(alphabet)
+    # alphabet = list(alphabet)
+
+    # print(len(alphabet))
+    # print(alphabet)
+
     alphabet = bytes([code for code in range(256)])
+    # print([i for i in (bytes([code for code in range(256)]))])
     alphabetList = [bytes([x]) for x in alphabet]
+    # print(alphabet)
+    # print(alphabetList)
     return alphabetList
 
+    # return bytes([code for code in range(256)])
 
-def processString(string: str):
-    alphabet = ["A", "B", "C", "D", "E", "F", 
-            "G", "H", "I", "J", "K", "L",
-            "M", "N", "O", "P", "Q", "R",
-            "S", "T", "U", "V", "W", "X", "Y", "Z"]
-
-    enigma = Enigma(alphabet, rotorCount=3)
-
-    encryptString = enigma.encodeStr(string)
-    print("Encrypt String: ", encryptString)
-    enigma.reset()
-    decryptString = enigma.encodeStr(encryptString)
-    print("Decrypt String: ", decryptString)
+    
 
 
-def processBinary(fileSrc: str = "./testProg/main"):
-    alphabetBytes = generateBinaryAlphabet()
+def generateBinaryFilePickle():
+    string = "DARTHVADER"
 
-    enigma = Enigma(alphabetBytes, 3)
-    enigma.encodeBinary(fileSrc, "./testProg/encoded.bin")
-    enigma.reset()
-    enigma.encodeBinary("./testProg/encoded.bin", "./testProg/decoded.bin")
+    with open(FILE, "wb") as file:
+        pickle.dump(string, file)
 
-    print("\nШифрование выполнено успешно. \
-        \nЗашифрованный файл - encode.bin, расшифрованный - decode.bin")
+    with open(FILE, "rb") as file:
+        print("Clear Binary:", file.read())
+        # print("From Binary:", pickle.load(file))
+
+
+def generateBinaryFile():
+    string = "DARTHVADER"
+
+    with open(FILE, "wb") as file:
+        for symbol in string:
+            symbol += "\n"
+            bt = symbol.encode()
+            file.write(bt)
+
+    with open(FILE, "rb") as file:
+        res = file.readlines()
+
+        for symbol in res:
+            print(symbol[:-1].decode())
+
+    
 
 
 
 def main():
 
-    menuText = """
-      Энигма
-    1. Шифрование строки (Верхний регистр Латинского алфавита)
-    2. Шифрование бинарного файла
-    
-    0. Выход\n
-    """
-    option = -1
+    alphabetBytes = generateBinaryAlphabet()
 
-    while (option != 0):
-        print(menuText)
-        option = int(input("Выберите пункт меню: "))
+    enigma = Enigma(alphabetBytes, 3)
+    print([rotor.position for rotor in enigma.rotors])
+    enigma.encodeBinary("./testProg/main", "./testProg/encoded.bin")
+    print([rotor.position for rotor in enigma.rotors])
+    enigma.reset()
+    print([rotor.position for rotor in enigma.rotors])
+    enigma.encodeBinary("./testProg/encoded.bin", "./testProg/decoded.bin")
 
-        if (option == 1):
-            string = input("Введите строку (только Латинский алфавит): ").upper()
-            print()
-            processString(string)
-        elif (option == 2):
-            filePath = input("Введите путь до файла (по умолчанию ./testProg/main): ")
+    # enigma = Enigma(alphabetBytes, 3)
+    # start = b'+'
+    # encrypted = enigma.process(start)
+    # enigma.reset()
+    # decrypted = enigma.process(encrypted)
 
-            if (filePath == ''):
-                processBinary()
-            else:
-                processBinary(filePath)
-        elif (option == 0):
-            break
+    # print("Src: ", start, "Encrypted: ", encrypted, "Decrypted: ", decrypted)
 
-    
-# chmod u+x encoded.bin 
+
+
+
+    alphabet = ["A", "B", "C", "D", "E", "F", 
+                "G", "H", "I", "J", "K", "L",
+                "M", "N", "O", "P", "Q", "R",
+                "S", "T", "U", "V", "W", "X", "Y", "Z"]
+
+    # alphabetMixed1 = ["E", "K", "M", "F", "L", "G", 
+    #                   "D", "Q", "V", "Z", "N", "T",
+    #                   "O", "W", "Y", "H", "X", "U",
+    #                   "S", "P", "A", "I", "B", "R", "C", "J"]
+
+    # alphabetMixed2 = ["A", "J", "D", "K", "S", "I", 
+    #                   "R", "U", "X", "B", "L", "H",
+    #                   "W", "T", "M", "C", "Q", "G",
+    #                   "Z", "N", "P", "Y", "F", "V", "O", "E"]
+
+    # alphabetMixed3 = ["B", "D", "F", "H", "J", "L", 
+    #                   "C", "P", "R", "T", "X", "V",
+    #                   "Z", "N", "Y", "E", "Q", "W",
+    #                   "G", "A", "K", "M", "U", "S", "I", "O"]
+
+    # # alphabetReflect = ["Y", "R", "U", "H", "Q", "S", 
+    # #                    "L", "D", "T", "X", "N", "G",
+    # #                    "O", "K", "M", "I", "E", "B",
+    # #                    "F", "Z", "C", "W", "V", "J", "A", "P"]
+
+    # alphabetReflect = {"A": "Y", "B": "R", "C": "U", "D": "H",
+    #                    "E": "Q", "F": "S", "G": "L", "H": "D",
+    #                    "I": "T", "J": "X", "K": "N", "L": "G",
+    #                    "M": "O", "N": "K", "O": "M", "P": "I",
+    #                    "Q": "E", "R": "B", "S": "F", "T": "Z",
+    #                    "U": "C", "V": "W", "W": "V", "X": "J",
+    #                    "Y": "A", "Z": "P"}
+
+    # positionSymbol1 = "R"
+    # positionSymbol2 = "V"
+    # positionSymbol3 = "C"
+
+    # enigma = Enigma(alphabet, 3, alphabetReflect,
+    #                 [alphabetMixed1, alphabetMixed2, alphabetMixed3],
+    #                 [positionSymbol1, positionSymbol2, positionSymbol3])
+
+
+    # enigma = Enigma(alphabet, 3)
+
+    # testString = "DARTHVADER"
+    # encryptString = str()
+    # decryptString = str()
+
+    # for symbol in testString:
+    #     res = enigma.process(symbol)
+    #     encryptString += res
+
+    # print("Encrypt String: ", encryptString)
+    # enigma.reset()
+
+    # for symbol in encryptString:
+    #     res = enigma.process(symbol)
+    #     decryptString += res
+
+    # print("Decrypt String: ", decryptString)
+
+    # generateBinaryFile()
+
     
 
     
