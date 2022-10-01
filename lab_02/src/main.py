@@ -1,4 +1,7 @@
 from random import randint, shuffle
+import config
+
+RESULT_FOLDER_PATH = './result/'
 
 
 class Rotor():
@@ -6,18 +9,21 @@ class Rotor():
     alphabetMixed: list
     position: int
 
+
     def __init__(self, alphabet: list, alphabetMixed: list, position: int):
         self.alphabet = alphabet
         self.alphabetMixed = alphabetMixed
         self.position = position
 
+
     def setPosition(self, position):
         self.position = position
 
+
     def rotate(self):
         self.position = (self.position + 1) % len(self.alphabet)
-
         return self.position
+
 
     def getSymbolForward(self, symbol):
         foundPosition = (self.getSymbolPosition(self.alphabet, symbol) +
@@ -26,12 +32,14 @@ class Rotor():
 
         return foundSymbol
 
+
     def getSymbolBack(self, symbol):
         foundPosition = (self.getSymbolPosition(self.alphabetMixed, symbol) -
             self.position) % (len(self.alphabet))
         foundSymbol = self.alphabet[foundPosition]
 
         return foundSymbol
+
 
     def getSymbolPosition(self, alphabet: list, symbol):
         curPos = -1
@@ -42,7 +50,7 @@ class Rotor():
                 break
 
         if (curPos == -1):
-            print("NO SYMBOL")
+            print("Такого символа нет в алфавите:", symbol)
 
         return curPos
 
@@ -52,6 +60,7 @@ class Reflector():
 
     def __init__(self, alphabet: dict):
         self.alphabet = alphabet
+
 
     def reflect(self, symbol):
         return self.alphabet[symbol]
@@ -65,6 +74,7 @@ class Enigma():
     rotorCount: int
     rotors: list
     reflector: Reflector
+
 
     def __init__(self, alphabet: list, rotorCount: int, alphabetReflect: list = None,
         alphabetMixedN: list = None, positionN: list = None):
@@ -103,9 +113,11 @@ class Enigma():
 
         self.reflector = Reflector(self.alphabetReflect)
     
+
     def reset(self):
         for i, rotor in enumerate(self.rotors):
             rotor.setPosition(self.positionN[i])
+
 
     def generateMixedAlphabets(self):
         shuffledAlphabets = list()
@@ -116,6 +128,7 @@ class Enigma():
             shuffledAlphabets.append(tmpAlphabet)
 
         return shuffledAlphabets       
+
 
     def generateReflectAlphabet(self):
         tmpReflectAlphabet = self.alphabet.copy()
@@ -128,12 +141,14 @@ class Enigma():
 
         return alphabetReflect
 
+
     def rotateRotors(self):
         for rotor in self.rotors:
             position = rotor.rotate()
 
             if (position != 0):
                 break
+
 
     def process(self, symbol):
         for ind in range(0, len(self.rotors), 1):
@@ -145,12 +160,18 @@ class Enigma():
             symbol = self.rotors[ind].getSymbolBack(symbol)
 
         self.rotateRotors()
-
         return symbol
 
+
     def encodeBinary(self, pathSrc: str, dstName: str):
-        srcFile = open(pathSrc, "rb")
+        try:
+            srcFile = open(pathSrc, "rb")
+        except FileNotFoundError:
+            print("\nОшибка: файл \'{0}\' не сущетсвует. Шифрование невозможно".format(pathSrc))
+            return -1
+        
         dstFile = open(dstName, "wb")
+
         while True:
             byte = srcFile.read(1)
 
@@ -162,6 +183,9 @@ class Enigma():
 
         srcFile.close()
         dstFile.close()
+
+        return 0
+
 
     def encodeStr(self, string: str):
         encryptString = str()
@@ -180,30 +204,32 @@ def generateBinaryAlphabet():
 
 
 def processString(string: str):
-    alphabet = ["A", "B", "C", "D", "E", "F", 
-            "G", "H", "I", "J", "K", "L",
-            "M", "N", "O", "P", "Q", "R",
-            "S", "T", "U", "V", "W", "X", "Y", "Z"]
-
-    enigma = Enigma(alphabet, rotorCount=3)
+    alphabet = config.alphabetString
+    enigma = Enigma(alphabet, rotorCount=config.rotorCount)
 
     encryptString = enigma.encodeStr(string)
-    print("Encrypt String: ", encryptString)
+    print("Зашифрованная строка: \t", encryptString)
     enigma.reset()
     decryptString = enigma.encodeStr(encryptString)
-    print("Decrypt String: ", decryptString)
+    print("Расшифрованная строка: \t", decryptString)
 
 
-def processBinary(fileSrc: str = "./testProg/main"):
+def processBinary(fileSrc: str = config.defaultTestProgram):
     alphabetBytes = generateBinaryAlphabet()
 
-    enigma = Enigma(alphabetBytes, 3)
-    enigma.encodeBinary(fileSrc, "./testProg/encoded.bin")
-    enigma.reset()
-    enigma.encodeBinary("./testProg/encoded.bin", "./testProg/decoded.bin")
+    enigma = Enigma(alphabetBytes, rotorCount=config.rotorCount)
 
-    print("\nШифрование выполнено успешно. \
-        \nЗашифрованный файл - encode.bin, расшифрованный - decode.bin")
+    encodedFilePath = RESULT_FOLDER_PATH + config.encodedFile
+    returnCode = enigma.encodeBinary(fileSrc, encodedFilePath)
+
+    enigma.reset()
+
+    if (returnCode == 0):
+        decodedFilePath = RESULT_FOLDER_PATH + config.decodedFile
+        enigma.encodeBinary(encodedFilePath, decodedFilePath)
+
+        print("\nШифрование выполнено успешно. \
+            \nЗашифрованный файл -", config.encodedFile,", расшифрованный -", config.decodedFile)
 
 
 
@@ -211,8 +237,8 @@ def main():
 
     menuText = """
       Энигма
-    1. Шифрование строки (Верхний регистр Латинского алфавита)
-    2. Шифрование бинарного файла
+    1. Шифрование строки (Верхний регистр Латинского алфавита и символы \"?!. \")
+    2. Шифрование любого файла побайтово
     
     0. Выход\n
     """
@@ -220,14 +246,20 @@ def main():
 
     while (option != 0):
         print(menuText)
-        option = int(input("Выберите пункт меню: "))
+
+        try:
+            option = int(input("Выберите пункт меню: "))
+        except:
+            print("\nОшибка: неверный пункт меню")
+            continue
 
         if (option == 1):
-            string = input("Введите строку (только Латинский алфавит): ").upper()
+            string = input("Введите строку (только Латинский алфавит и символы \"?!. \"): ").upper()
             print()
             processString(string)
         elif (option == 2):
-            filePath = input("Введите путь до файла (по умолчанию ./testProg/main): ")
+            filePath = input("Введите путь до файла (по умолчанию {0}): "
+                .format(config.defaultTestProgram))
 
             if (filePath == ''):
                 processBinary()
@@ -235,11 +267,6 @@ def main():
                 processBinary(filePath)
         elif (option == 0):
             break
-
-    
-# chmod u+x encoded.bin 
-    
-
     
 
 if __name__ == "__main__":
