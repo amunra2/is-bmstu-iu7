@@ -48,4 +48,4 @@ python3 answerIs.py
 
 <img src="./img/example.png"/>
 
-_@amunra2 (2021г.)_
+_@amunra2 (2022г.)_
