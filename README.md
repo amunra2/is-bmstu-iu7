@@ -11,4 +11,4 @@
  
  [ЛР3: Coming Soon...](https://github.com/amunra2/is-bmstu-iu7)
 
-_@amunra2 (2021г.)_
+_@amunra2 (2022г.)_
