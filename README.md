@@ -9,6 +9,6 @@
  
  [ЛР2: Энигма](./lab_02/)
  
- [ЛР3: Coming Soon...]()
+ [ЛР3: Coming Soon...](https://github.com/amunra2/is-bmstu-iu7)
 
 _@amunra2 (2021г.)_
