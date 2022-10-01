@@ -22,6 +22,6 @@ def createStartfile(key: str):
 
 def install():
     createStartfile(getMachineId())
-    print("Уствновка выполнена успешно")
+    print("Установка выполнена успешно")
 
 install()
