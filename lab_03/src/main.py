@@ -166,11 +166,12 @@ def cypherString(message: str = "test", key: str = "FADEFACE"):
     decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
     print("Decrypted STR:", decryptedStr)
 
-
-
-def encryptText(message: str, key: str, operationType: int) -> str:
-    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
-    keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
+'''
+    Зашифрованное сообщение не может быть перекодировано в стандартную UTF-8,
+    поэтому работа производится с hex форматом
+'''
+def encryptHex(messageHex: str, keyHex: str, operationType: int) -> str:
+    keyBin = fillZero(hex2ba(keyHex), MESSAGE_SIZE)
 
     # Дешифрование
     message16hex = str() # 16 hex in 64 bits
@@ -189,104 +190,65 @@ def encryptText(message: str, key: str, operationType: int) -> str:
 
     if (len(message16hex) != 0): # если остались необработанные символы
         messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
-            
-        print("message16hex =", message16hex)
-        print("messageBin =", messageBin)
 
-        decrypted = des(messageBin, keyBin, operationType=DECYPHER)
-        decryptedHex += ba2hex(decrypted)
-
-    print("Decrypted HEX:", decryptedHex)
-    decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
-    print("Decrypted STR:", decryptedStr)
-
-
-
-def cypherText(message: str = "it is very long text to cypher", key: str = "FADEFACE"):
-    # Данные
-    print("Message Origin:", message)
-    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
-    print("Message HEX: ", messageHex)
-
-    print("Key:", key)
-    keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
-
-    # Шифрование
-    message16hex = str()
-    encryptedHex = str()
-
-    for symbol in messageHex:
-        if (len(message16hex) != 16):
-            message16hex += symbol
-        else:
-            messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
-            
-            print("message16hex =", message16hex)
-            print("messageBin =", messageBin)
-
-            encrypted = des(messageBin, keyBin, operationType=CYPHER)
-            encryptedHex += ba2hex(encrypted)
-
-            message16hex = symbol
-
-    if (len(message16hex) != 0):
-        messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
-            
-        print("message16hex =", message16hex)
-        print("messageBin =", messageBin)
-
-        encrypted = des(messageBin, keyBin, operationType=CYPHER)
+        encrypted = des(messageBin, keyBin, operationType=operationType)
         encryptedHex += ba2hex(encrypted)
 
-    print("\nEncrypted HEX:", encryptedHex)
+    return encryptedHex
 
-    print("=" * 70)
 
-    # Дешифрование
-    message16hex = str()
-    decryptedHex = str()
+def cypherText(message: str = "it is very long text to cypher", keyHex: str = "FADEFACE"):
+    print("Origin message:", message)
+    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
 
-    for symbol in encryptedHex:
-        if (len(message16hex) != 16):
-            message16hex += symbol
-        else:
-            messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
-            
-            print("message16hex =", message16hex)
-            print("messageBin =", messageBin)
+    encryptedHex = encryptHex(messageHex, keyHex, operationType=CYPHER)
+    print("Encrypted HEX:", encryptedHex)
 
-            decrypted = des(messageBin, keyBin, operationType=DECYPHER)
-            decryptedHex += ba2hex(decrypted)
-
-            message16hex = symbol
-
-    if (len(message16hex) != 0):
-        messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
-            
-        print("message16hex =", message16hex)
-        print("messageBin =", messageBin)
-
-        decrypted = des(messageBin, keyBin, operationType=DECYPHER)
-        decryptedHex += ba2hex(decrypted)
-
-    print("Decrypted HEX:", decryptedHex)
+    decryptedHex = encryptHex(encryptedHex, keyHex, operationType=DECYPHER)
     decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
-    print("Decrypted STR:", decryptedStr)
+    print("Decrypted:", decryptedStr)
 
 
-            
+
+def encodeFile(srcFileName: str, dstFileName: str, keyHex: str, operationType: int):
+    srcFile = open(srcFileName, "rb")
+    dstFile = open(dstFileName, "wb")
+
+    keyBin = fillZero(hex2ba(keyHex), MESSAGE_SIZE)
+
+    while True:
+        readBytes8 = srcFile.read(8)
+
+        if not readBytes8:
+            break
+
+        readHex = readBytes8.hex()
+        readBytesBin = fillZero(hex2ba(readHex), MESSAGE_SIZE)
+        encryptBin = des(readBytesBin, keyBin, operationType=operationType)
+        encryptHex = ba2hex(encryptBin)
+
+        encryptBytes = bytes.fromhex(encryptHex)
+        dstFile.write(encryptBytes)
+
+    srcFile.close()
+    dstFile.close()
+
+    print("ФАЙЛ ЗАШИФРОВАН", dstFileName)
 
 
-    # messageBin = fillZero(hex2ba(messageHex), MESSAGE_SIZE)
-    # print("Message BIN: ", messageBin)
+def cypherFile(keyHex: str = "FADEFACE"):
+    encodeFile("./testProg/main.exe", "./result/encoded.bin", keyHex, operationType=CYPHER)
+    encodeFile("./result/encoded.bin", "./result/decoded.bin", keyHex, operationType=DECYPHER)
 
-    
+
 def main():
     # cypherHex()
 
     # cypherString()
 
-    cypherText()
+    # cypherText()
+
+    cypherFile()
 
 
 
