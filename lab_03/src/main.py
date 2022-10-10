@@ -1,3 +1,4 @@
+from email import message
 from bitarray import bitarray
 from bitarray.util import hex2ba, ba2hex
 
@@ -121,14 +122,12 @@ def des(message: bitarray, key: bitarray, operationType: int):
 
     return finalPermut
 
-    
-def main():
+
+def cypherHex(message: str = "DEADBEEF", key: str = "FADEFACE"):
     # Данные
-    message = "DEADBEEF"
     print("Origin:", message)
     messageBin = fillZero(hex2ba(message), MESSAGE_SIZE)
 
-    key = "FADEFACE"
     print("Key:", key)
     keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
 
@@ -141,6 +140,154 @@ def main():
 
     decrypted = des(encrypted, keyBin, operationType=DECYPHER)
     print("Decrypted:", ba2hex(decrypted))
+
+
+def cypherString(message: str = "test", key: str = "FADEFACE"):
+    # Данные
+    print("Message Origin:", message)
+    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
+    print("Message HEX: ", messageHex)
+    messageBin = fillZero(hex2ba(messageHex), MESSAGE_SIZE)
+    print("Message BIN: ", messageBin)
+
+    print("Key:", key)
+    keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
+
+    # Шифровка
+    encrypted = des(messageBin, keyBin, operationType=CYPHER)
+    encryptedHex = ba2hex(encrypted)
+    print("Encrypted:", encryptedHex)
+
+    # Дешифровка
+    encrypted = fillZero(encrypted, MESSAGE_SIZE)
+    decrypted = des(encrypted, keyBin, operationType=DECYPHER)
+    decryptedHex = ba2hex(decrypted)
+    print("Decrypted HEX:", decryptedHex)
+    decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
+    print("Decrypted STR:", decryptedStr)
+
+
+
+def encryptText(message: str, key: str, operationType: int) -> str:
+    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
+    keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
+
+    # Дешифрование
+    message16hex = str() # 16 hex in 64 bits
+    encryptedHex = str()
+
+    for symbol in messageHex:
+        if (len(message16hex) != 16):
+            message16hex += symbol
+        else:
+            messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE) # fillZero по идее, не нужна, но пусть будет
+
+            encrypted = des(messageBin, keyBin, operationType=operationType)
+            encryptedHex += ba2hex(encrypted)
+
+            message16hex = symbol
+
+    if (len(message16hex) != 0): # если остались необработанные символы
+        messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
+            
+        print("message16hex =", message16hex)
+        print("messageBin =", messageBin)
+
+        decrypted = des(messageBin, keyBin, operationType=DECYPHER)
+        decryptedHex += ba2hex(decrypted)
+
+    print("Decrypted HEX:", decryptedHex)
+    decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
+    print("Decrypted STR:", decryptedStr)
+
+
+
+def cypherText(message: str = "it is very long text to cypher", key: str = "FADEFACE"):
+    # Данные
+    print("Message Origin:", message)
+    messageHex = "".join(["{:x}".format(ord(s)) for s in message])
+    print("Message HEX: ", messageHex)
+
+    print("Key:", key)
+    keyBin = fillZero(hex2ba(key), MESSAGE_SIZE)
+
+    # Шифрование
+    message16hex = str()
+    encryptedHex = str()
+
+    for symbol in messageHex:
+        if (len(message16hex) != 16):
+            message16hex += symbol
+        else:
+            messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
+            
+            print("message16hex =", message16hex)
+            print("messageBin =", messageBin)
+
+            encrypted = des(messageBin, keyBin, operationType=CYPHER)
+            encryptedHex += ba2hex(encrypted)
+
+            message16hex = symbol
+
+    if (len(message16hex) != 0):
+        messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
+            
+        print("message16hex =", message16hex)
+        print("messageBin =", messageBin)
+
+        encrypted = des(messageBin, keyBin, operationType=CYPHER)
+        encryptedHex += ba2hex(encrypted)
+
+    print("\nEncrypted HEX:", encryptedHex)
+
+    print("=" * 70)
+
+    # Дешифрование
+    message16hex = str()
+    decryptedHex = str()
+
+    for symbol in encryptedHex:
+        if (len(message16hex) != 16):
+            message16hex += symbol
+        else:
+            messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
+            
+            print("message16hex =", message16hex)
+            print("messageBin =", messageBin)
+
+            decrypted = des(messageBin, keyBin, operationType=DECYPHER)
+            decryptedHex += ba2hex(decrypted)
+
+            message16hex = symbol
+
+    if (len(message16hex) != 0):
+        messageBin = fillZero(hex2ba(message16hex), MESSAGE_SIZE)
+            
+        print("message16hex =", message16hex)
+        print("messageBin =", messageBin)
+
+        decrypted = des(messageBin, keyBin, operationType=DECYPHER)
+        decryptedHex += ba2hex(decrypted)
+
+    print("Decrypted HEX:", decryptedHex)
+    decryptedStr = bytes.fromhex(decryptedHex).decode("utf-8")
+    print("Decrypted STR:", decryptedStr)
+
+
+            
+
+
+    # messageBin = fillZero(hex2ba(messageHex), MESSAGE_SIZE)
+    # print("Message BIN: ", messageBin)
+
+    
+def main():
+    # cypherHex()
+
+    # cypherString()
+
+    cypherText()
+
 
 
 if __name__ == "__main__":
