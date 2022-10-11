@@ -1,5 +1,9 @@
 MESSAGE_SIZE = 64 # в битах
 ROUNDS = 16 # Число раундов
+BREAKLINE = "\n" + "=" * 70
+OK = 0
+NO_FILE = -1
+RESULT_FOLDER_PATH = './result/'
 
 # Типы операций
 CYPHER = 0 # шифрование
