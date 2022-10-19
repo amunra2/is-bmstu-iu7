@@ -9,6 +9,10 @@
  
  [ЛР2: Энигма](./lab_02/)
  
- [ЛР3: Coming Soon...](https://github.com/amunra2/is-bmstu-iu7)
+ [ЛР3: Алгоритм шифрования DES/AES (Реализован DES)](./lab_03/)
+
+ [ЛР4: Coming Soon...](https://github.com/amunra2/is-bmstu-iu7)
+
+ [ЛР5: Coming Soon...](https://github.com/amunra2/is-bmstu-iu7)
 
 _@amunra2 (2022г.)_

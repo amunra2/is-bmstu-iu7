@@ -144,3 +144,7 @@ def des(message: bitarray, key: bitarray, operationType: int):
     finalPermut = permutation(blockLeft + blockRight, IP1)
 
     return finalPermut
+
+
+# chmod u+x encoded.bin
+# chmod u+x decoded.bin

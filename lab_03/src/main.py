@@ -134,8 +134,8 @@ def main():
         Алгоритм шифрования DES
 
     1. Зашифровать строку
-    2. Зашифровать файл
-    3. Зашифровать HEX
+    2. Зашифровать HEX
+    3. Зашифровать файл
 
     0. Выход
     '''
@@ -157,6 +157,9 @@ def main():
             string = input("Введите строку для шифрования: ")
             parseText(string)
         elif (option == 2):
+            hex = input("Введите HEX для шифрования: ")
+            parseHex(hex)
+        elif (option == 3):
             filePath = input("Введите путь до файла (по умолчанию \'{}\'): "
                 .format(config.defaultTestProgram))
 
@@ -164,9 +167,6 @@ def main():
                 parseFile()
             else:
                 parseFile(filePath)
-        elif (option == 3):
-            hex = input("Введите HEX для шифрования: ")
-            parseHex(hex)
         elif(option == 0):
             break
         else:
