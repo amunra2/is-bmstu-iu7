@@ -2,7 +2,7 @@
 
 
 int main(void) {
-    printf("Ansewer Is Still 42\n");
+    printf("Answer Is Still 42\n");
 }
 
 // gcc main.c -o main
