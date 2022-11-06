@@ -1,12 +1,20 @@
 import os
 from bitarray import bitarray
 from bitarray.util import ba2hex, hex2ba
+import pyfiglet
+
+import config
+from utils import printProgressBar
 
 
 SPACE = "  "
-
+RESULT_FOLDER = "result/"
+BYTES_PER_ITERATION = 100
 
 class Node():
+    """
+        Звено дерева для алгоритма сжатия Хаффмана
+    """
     def __init__(self, count: int, data=None, left=None, right=None):
         self.data = data
         self.count = count
@@ -24,6 +32,9 @@ class Node():
 
 
 class HaffmanCode():
+    """
+        Алгоритм сжатия Хаффмана
+    """
     def __init__(self) -> None:
         self.root = None
 
@@ -67,6 +78,9 @@ class HaffmanCode():
 
 
     def __getCodeBySymbleRecursive(self, root: Node, symbol, code):
+        """
+            Получить код символа в дереве (рекурсивно)
+        """
         result = ""
 
         if (root.data == symbol):
@@ -83,6 +97,9 @@ class HaffmanCode():
 
     
     def getCodeBySymbol(self, symbol):
+        """
+            Получить код символа в дереве
+        """
         if (self.root == None):
             print("Ошибка: Дерево не сгенерировано")
             return
@@ -91,6 +108,9 @@ class HaffmanCode():
 
 
     def __getSymbolByCodeRecursive(self, root: Node, code):
+        """
+            Получить символ по его коду в дереве (рекурсивно)
+        """
         result = ""
 
         if (code == ""):
@@ -105,6 +125,9 @@ class HaffmanCode():
         return result
 
     def getSymbolByCode(self, code):
+        """
+            Получить символ по его коду в дереве
+        """
         if (self.root == None):
             print("Ошибка: Дерево не сгенерировано")
             return
@@ -139,7 +162,11 @@ class HaffmanCode():
             self.__printTreeRecursive(root.right, space + SPACE)
 
 
-def getCountSymbolsDict(filePath: str):
+def getFrequencyTable(filePath: str) -> dict:
+    """
+        Получение таблицы частотности встречи каждого
+        байта в файле filePath
+    """
     try:
         fullPath = os.path.join(os.getcwd(), filePath)
         file = open(fullPath, "rb")
@@ -148,6 +175,16 @@ def getCountSymbolsDict(filePath: str):
         return
 
     frequencyTable = dict()
+
+    print("\nВычисление таблицы частотности встречи байтов в файле")
+
+    ###### Для шкалы выполнения процесса ######
+    fileSize = file.seek(0, os.SEEK_END)
+    file.seek(0)
+
+    curIteration = 0
+    totalIterations = fileSize
+    ###### Для шкалы выполнения процесса ######
 
     while True:
         byte = file.read(1)
@@ -162,12 +199,25 @@ def getCountSymbolsDict(filePath: str):
         
         frequencyTable.update({byte: count})
 
+        curIteration += 1
+        printProgressBar(curIteration, totalIterations, prefix=" Прогресс", suffix="Выполнено")
+
     file.close()
 
     return frequencyTable
 
 
-def compressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
+def compressFile(srcPath: str, dstPath: str, frequencdyTable: dict):
+    """
+        Функция сжимает файл srcPath и записывает результат в dstPath
+        При этом, если кол-во битов не делится на 8, то дополняется
+        0-ыми битами и их количество записывается в конец файла (по коду Хаффмана)
+    """
+
+    haffmanCode = HaffmanCode()
+    haffmanCode.generateTreeByDict(frequencdyTable)
+
+    ################# READ #######################
     try:
         fullPath = os.path.join(os.getcwd(), srcPath)
         srcFile = open(fullPath, "rb")
@@ -175,9 +225,17 @@ def compressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
         print("Ошибка: файл \'%s\' отстуствует" % fullPath)
         return
 
+    print("\nСжатие файла")
+    ###### Для шкалы выполнения процесса ######
+    fileSize = srcFile.seek(0, os.SEEK_END)
+    srcFile.seek(0)
+
+    curIteration = 0
+    totalIterations = fileSize
+    ###### Для шкалы выполнения процесса ######
+
     resultStringOfBits = ""
 
-    ################# READ #######################
     while True:
         byte = srcFile.read(1)
 
@@ -192,9 +250,11 @@ def compressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
 
         resultStringOfBits += code
 
+        curIteration += 1
+        printProgressBar(curIteration, totalIterations, prefix=" Прогресс", suffix="Выполнено")
+
     srcFile.close()
     ################# READ #######################
-
 
     ################ ADD BITS #####################
     extraBits = len(resultStringOfBits) % 8
@@ -203,7 +263,6 @@ def compressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
         bitsToAdd = 8 - extraBits
         resultStringOfBits += "0" * bitsToAdd
     ################ ADD BITS #####################
-
 
     ############### WRITE BITS ####################
     fullPath = os.path.join(os.getcwd(), dstPath)
@@ -216,7 +275,17 @@ def compressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
     ############### WRITE BITS ####################
 
 
-def decompressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
+def decompressFile(srcPath: str, dstPath: str, frequencdyTable: dict):
+    """
+        Функция возвращает исходный файл из сжатого srcPath и записывает в dstPath
+        При этом сначала вычитаются лишние биты, исходя из числа в крайнеа байте
+        файла srcPath (по коду Хаффмана)
+    """
+
+    haffmanCode = HaffmanCode()
+    haffmanCode.generateTreeByDict(frequencdyTable)
+
+    ################# READ #######################
     try:
         fullPath = os.path.join(os.getcwd(), srcPath)
         srcFile = open(fullPath, "rb")
@@ -226,20 +295,31 @@ def decompressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
 
     resultBytes = srcFile.read()
     srcFile.close()
+    ################# READ #######################
 
+    ############## DELETE BITS ###################
     bitsToDelete = int(resultBytes[-1:].decode(encoding="utf-8"))
     resultBytes = resultBytes[:-1]
 
-    bits = hex2ba(resultBytes.hex()).to01()
+    bits = hex2ba(resultBytes.hex()).to01() # в тип данных строка!
     bits = bits[:-bitsToDelete]
+    ############## DELETE BITS ###################
 
-    
+    ############### WRITE BITS ###################
     fullPath = os.path.join(os.getcwd(), dstPath)
     dstFile = open(fullPath, "wb")
 
+    print("\nВосстановление файла")
+    ###### Для шкалы выполнения процесса ######
+    curIteration = 0
+    totalIterations = len(bits)
+    ###### Для шкалы выполнения процесса ######
+
     code = ""
 
-    while (bits != ""):
+    # берется по одному числа кода и ищется символ
+    # не нашелся -- берется еще одно число кода
+    while (bits != ""): 
         code += bits[:1]
         bits = bits[1:]
 
@@ -249,59 +329,41 @@ def decompressFile(srcPath: str, dstPath: str, haffmanCode: HaffmanCode):
             dstFile.write(result)
             code = ""
 
+        curIteration += 1
+        printProgressBar(curIteration, totalIterations, prefix=" Прогресс", suffix="Выполнено")
+
     dstFile.close()
+    ############### WRITE BITS ###################
 
 
+def parseFile(filePath: str = config.defaultTestProgram):
+    frequencyTable = getFrequencyTable(filePath)
+    
+    compressedFilePath = RESULT_FOLDER + config.compressedFile
+    compressFile(filePath, compressedFilePath, frequencyTable)
 
+    decompressedFilePath = RESULT_FOLDER + config.decompressedFile
+    decompressFile(compressedFilePath, decompressedFilePath, frequencyTable)
 
-def binStrToBytes(binString: str):
-    bitArr = bitarray(binString)
-    # hexArr = ba2hex(bitArr)
-    byte = bitArr.tobytes()#bytes.fromhex(hexArr)
-    print(byte)
-
-    hexArr = byte.hex()
-    bitArr = hex2ba(hexArr)
-    print(bitArr)
-    print(bitArr.to01())
-
-
-def test(binString: str):
-    print(len(binString) % 8)
+    print("\nПроцесс завершен. \
+        \n\tВходной файл:         \'{0}\'; \
+        \n\tСжатый файл:          \'{1}\' \
+        \n\tВосстановленный файл: \'{2}\'"
+            .format(filePath, compressedFilePath, decompressedFilePath))
 
 
 def main():
-    # dictionary = {"a": 15, "b": 7, "c": 6, "d": 6, "e": 5}
+    title = pyfiglet.figlet_format("Haffman Code")
+    print(title)
 
-    srcPath = "lab_06/src/testProg/dv.png"
-    dstPath = "lab_06/src/testProg/result.bin"
+    filePath = input("Введите путь до файла (по умолчанию \'{}\'): "
+        .format(config.defaultTestProgram))
 
-
-    dictionary = getCountSymbolsDict(srcPath)
-
-    haffmanCode = HaffmanCode()
-    haffmanCode.generateTreeByDict(dictionary)
-    # haffmanCode.printTree(space="")
-
-    compressFile(srcPath, dstPath, haffmanCode)
-
-    srcPath = "lab_06/src/testProg/result.bin"
-    dstPath = "lab_06/src/testProg/decompressed.bin"
-
-    decompressFile(srcPath, dstPath, haffmanCode)
-
-
-
-
-
-    
-
+    if (filePath == ""):
+        parseFile()
+    else:
+        parseFile(filePath)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-    
