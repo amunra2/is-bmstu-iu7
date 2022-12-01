@@ -3,33 +3,35 @@ from defines import *
 import config as cfg
 
 
-def getKeyD(phi: int) -> int:
+def getKeyE(phi: int) -> int:
     """
-        Сгенерировать секретный ключ D
+        Сгенерировать публичный ключ E
         
         По алгоритму Евклида поиска взаимнопростых чисел
     """
     for num in range(phi // 100, phi // 10000, -1):
         if (areRelativelyPrime(phi, num)):
-            keyD = num
+            keyE = num
             break
 
-    return keyD
+    return keyE
 
 
-def getKeyE(phi: int, keyD: int) -> int:
+def getKeyD(phi: int, keyE: int) -> int:
     """
-        Сгенерировать публичный ключ E
+        Сгенерировать секретный ключ D
         
         По расширенному алгоритму Евклида
     """
     # Необходимо решить следующее соотношение
     # (keyE * keyD) mod (phi) = 1 =>
     # (keyE * keyD) = 1 + k * phi =>
-    # (keyD) * keyE - (phi) * k = 1 <=> 
-    # ax + by = НОД(a, b) = 1, где a = keyD, b = phi
+    # (keyE) * keyD - (phi) * k = 1 <=> 
+    # ax + by = НОД(a, b) = 1, где a = keyE, b = phi
+    
+    # keyE * keyD + phi * k = НОД(keyE, phi) = 1
 
-    return extendedEuklid(keyD, phi)
+    return extendedEuklid(keyE, phi)
 
 
 def getKeys():
@@ -45,11 +47,11 @@ def getKeys():
     # 3. Функция Эйлера
     phi = (p - 1) * (q - 1)
 
-    # 4. Ключ D поиском взаимно простого числа с phi
-    keyD = [getKeyD(phi), n]
+    # 4. Ключ E поиском взаимно простого числа с phi
+    keyE = [getKeyE(phi), n]
 
-    # 5. Ключ E с помощью расширенного алогритма Евклида
-    keyE = [getKeyE(phi, keyD[KEY]), n]
+    # 5. Ключ D с помощью расширенного алогритма Евклида
+    keyD = [getKeyD(phi, keyE[KEY]), n]
 
     return keyD, keyE
 

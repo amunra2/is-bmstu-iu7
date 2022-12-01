@@ -76,10 +76,10 @@ def parseFile(srcFilePath: str = cfg.defaultTestProgram):
     print("Секретный ключ D:", keyD)
 
     encodedFilePath = RESULT_FOLDER_PATH + cfg.encodedFile
-    encodeBinary(srcFilePath, encodedFilePath, key=keyD, operationType=CYPHER)
+    encodeBinary(srcFilePath, encodedFilePath, key=keyE, operationType=CYPHER)
 
     decodedFilePath = RESULT_FOLDER_PATH + cfg.decodedFile
-    encodeBinary(encodedFilePath, decodedFilePath, key=keyE, operationType=DECYPHER)
+    encodeBinary(encodedFilePath, decodedFilePath, key=keyD, operationType=DECYPHER)
 
 
 def main():

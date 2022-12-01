@@ -15,8 +15,8 @@ def hashFile(srcFilePath: str, hashFilePath: str):
 
     dstFile = open(hashFilePath, "w")
 
-    byte = srcFile.read()
-    hashedBytes = hashlib.sha512(byte).hexdigest()
+    text = srcFile.read()
+    hashedBytes = hashlib.sha512(text).hexdigest()
     dstFile.write(hashedBytes)
 
     srcFile.close()
@@ -30,7 +30,7 @@ def encodeBinary(pathSrc: str, pathDst: str, key: list[int], operationType: int)
     try:
         srcFile = open(pathSrc, "rb")
     except FileNotFoundError:
-        print("\nОшибка: файл \'{0}\' не сущетсвует. Шифрование невозможно".format(pathSrc))
+        print("\nОшибка: файл \'{0}\' не существует. Шифрование невозможно".format(pathSrc))
         return -1
     
     dstFile = open(pathDst, "wb")
@@ -69,6 +69,12 @@ def encodeBinary(pathSrc: str, pathDst: str, key: list[int], operationType: int)
     return 0
 
 
+# НЕПРАВИЛЬНО, НАДО ТАК: decodedFile, public key, srcFile
+# 1. Расшифроать decodedFile (с исп public key) -> hash
+# 2. Захешировать srcFile
+# 3. Сравнить хеши
+
+
 def compareFiles(oneFilePath: str, twoFilePath: str):
     print("\n" + "-" * 30 + "СРАВНЕНИЕ ФАЙЛОВ" + "-" * 30)
     print("Файлы:\n\t1. \'{0}\'\n\t2. \'{1}\'\n".format(oneFilePath, twoFilePath))
@@ -105,10 +111,10 @@ def parseFile(srcFilePath: str):
 
     # Изменение: для электронной подписи ключи меняются местами
     encodedFilePath = RESULT_FOLDER_PATH + cfg.encodedFile
-    encodeBinary(srcFilePath, encodedFilePath, key=keyE, operationType=CYPHER)
+    encodeBinary(srcFilePath, encodedFilePath, key=keyD, operationType=CYPHER)
 
     decodedFilePath = RESULT_FOLDER_PATH + cfg.decodedFile
-    encodeBinary(encodedFilePath, decodedFilePath, key=keyD, operationType=DECYPHER)
+    encodeBinary(encodedFilePath, decodedFilePath, key=keyE, operationType=DECYPHER)
 
     compareFiles(srcFilePath, decodedFilePath)
 

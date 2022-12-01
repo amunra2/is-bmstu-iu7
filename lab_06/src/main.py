@@ -77,7 +77,7 @@ class HaffmanCode():
         self.root = nodeList[0]
 
 
-    def __getCodeBySymbleRecursive(self, root: Node, symbol, code):
+    def __getCodeBySymbolRecursive(self, root: Node, symbol, code):
         """
             Получить код символа в дереве (рекурсивно)
         """
@@ -88,10 +88,10 @@ class HaffmanCode():
             result += code
 
         if (root.left):
-            result += self.__getCodeBySymbleRecursive(root.left, symbol, code + "0")
+            result += self.__getCodeBySymbolRecursive(root.left, symbol, code + "0")
 
         if (root.right):
-            result += self.__getCodeBySymbleRecursive(root.right, symbol, code + "1") 
+            result += self.__getCodeBySymbolRecursive(root.right, symbol, code + "1") 
 
         return result
 
@@ -104,7 +104,7 @@ class HaffmanCode():
             print("Ошибка: Дерево не сгенерировано")
             return
 
-        return self.__getCodeBySymbleRecursive(self.root, symbol=symbol, code="")
+        return self.__getCodeBySymbolRecursive(self.root, symbol=symbol, code="")
 
 
     def __getSymbolByCodeRecursive(self, root: Node, code):
@@ -120,9 +120,10 @@ class HaffmanCode():
             result = self.__getSymbolByCodeRecursive(root.left, code[1:])
 
         if (code[:1] == "1"):
-            result = self.__getSymbolByCodeRecursive(root.right, code[1:]) 
+            result = self.__getSymbolByCodeRecursive(root.right, code[1:])
 
         return result
+
 
     def getSymbolByCode(self, code):
         """

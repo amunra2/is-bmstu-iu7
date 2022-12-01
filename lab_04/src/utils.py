@@ -97,12 +97,13 @@ def extendedEuklid(a: int, b: int):
             ]
             eMatrix = multiplyMatrixes(matA=eMatrix, matB=matQ)
 
-            bTemp = b
+            bTemp = b # обычный алгоритм Евклида
             b = a % b
             a = bTemp
 
     result = eMatrix[1][1]
 
+    # Так как вычисления в кольце, то при отриц прибавить
     if (result < 0):
         result += bSave
 
